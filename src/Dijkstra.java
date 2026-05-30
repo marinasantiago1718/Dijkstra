@@ -1,3 +1,7 @@
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 public class Dijkstra {
 
     private DirectedEdge[] edgeTo;
@@ -12,13 +16,14 @@ public class Dijkstra {
         pq = new IndexMinPQ<>(G.V());
     }
 
-    public int[] caminho(int origem) {
+    public List<Integer> caminho(int origem, int destino) {
 
-        distTo[origem] = 0.0;
+
         for(int i = 1; i < distTo.length; i++) {
             distTo[i] = Double.POSITIVE_INFINITY;
         }
 
+        distTo[origem] = 0.0;
         pq.insert(origem, distTo[origem]);
         while (!pq.isEmpty()) {
             int v = pq.delMin();
@@ -27,26 +32,41 @@ public class Dijkstra {
                 int atual = e.from();
                 int novo = e.to();
 
-                if(distTo[atual] > distTo[novo] + e.weight()) {
-                    distTo[atual] = distTo[novo] + e.weight();
-                    edgeTo[atual] = e;    
+                if(distTo[novo] > distTo[atual] + e.weight()) {
+                    distTo[novo] = distTo[atual] + e.weight();
+                    edgeTo[novo] = e;
 
-                    if(pq.contains(atual)) {
-                        pq.changeKey(atual, distTo[atual]);
+                    if(pq.contains(novo)) {
+                        pq.changeKey(novo, distTo[novo]);
                     } else {
-                        pq.insert(atual, distTo[atual]);
+                        pq.insert(novo, distTo[novo]);
                     }
                 }
                 
             }
         }
 
-        int[] menorCaminho = new int[edgeTo.length + 1];
-        for(int i = 0; i <= menorCaminho.length; i++) {
-            menorCaminho[i] = edgeTo[i].from();
+
+        if (distTo[destino] == Double.POSITIVE_INFINITY) {
+            return new ArrayList<>();
         }
 
-        return menorCaminho;
+        List<Integer> caminho = new ArrayList<>();
+
+        int atual = destino;
+
+        while (atual != origem) {
+
+            caminho.add(atual);
+
+            atual = edgeTo[atual].from();
+        }
+
+        caminho.add(origem);
+
+        Collections.reverse(caminho);
+
+        return caminho;
     }
      
 }
