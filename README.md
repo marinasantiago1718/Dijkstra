@@ -20,7 +20,10 @@ C. Dijkstra?
 ---
 
 # Como Executar a Solução
-Nesse exemplo, a entrada do repositório está sendo usada diretamente como input no Scanner presente na Main. Assim, basta executar a classe principal. A saída será impressa no console.
+Abra o terminal na pasta do projeto, compile o código e execute a classe principal passando o nome do arquivo da pasta Dados como argumento:
+```bash
+java Main input.txt
+```
 
 ---
 
@@ -72,7 +75,7 @@ Foi utilizado o algoritmo de Dijkstra para encontrar o caminho mínimo entre o v
 ---
 
 # Estruturas de Dados Utilizadas
-Para a implementação, foram utilizadas as classes da biblioteca Algs4 em Java, adaptadas para o contexto do problema.
+Para a implementação, foram utilizadas classes inspiradas na biblioteca Algs4 em Java.
 Embora o enunciado forneça um grafo não direcionado, a solução foi implementada utilizando uma estrutura de grafo direcionado.
 Para preservar o comportamento original, cada aresta da entrada foi inserida em ambas as direções.
 
