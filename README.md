@@ -163,5 +163,6 @@ Foi aplicada a versão clássica do algoritmo de Dijkstra para grafos direcionad
 ---
 # Comprovação de Accepted
 
+<img width="1474" height="103" alt="Captura de tela 2026-05-31 200135" src="https://github.com/user-attachments/assets/ef2f1743-3cbe-441c-803d-6d26b01ce9e7" />
 
 
