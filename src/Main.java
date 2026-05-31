@@ -1,77 +1,108 @@
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.List;
-import java.util.Locale;
-import java.util.Scanner;
-
-import java.util.Iterator;
-import java.util.NoSuchElementException;
-
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
-
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.Socket;
-import java.net.URL;
-import java.net.URLConnection;
-
-import java.util.InputMismatchException;
-import java.util.regex.Pattern;
-
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-
+import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.StringTokenizer;
+import java.io.FileReader;
 
 public class Main {
 
-    public static void main(String[] args) throws FileNotFoundException {
+    public static void main(String[] args) {
+        FastReader scanner;
 
-        Scanner scanner = new Scanner(
-                new File("entrada/inputCodeForces.txt")
-        ).useLocale(Locale.US);
-
-        int n = scanner.nextInt();
+        if (args.length > 0) {
+            try {
+                scanner = new FastReader(args[0]);
+            } catch (IOException e) {
+                System.err.println("Erro ao abrir o arquivo: " + args[0]);
+                return;
+            }
+        } else {
+            scanner = new FastReader();
+        }
+        String nStr = scanner.next();
+        if (nStr == null) return;
+        
+        int n = Integer.parseInt(nStr);
         int m = scanner.nextInt();
-
 
         EdgeWeightedDigraph G = new EdgeWeightedDigraph(n + 1);
 
         for (int i = 0; i < m; i++) {
-
             int a = scanner.nextInt();
             int b = scanner.nextInt();
-            double peso = scanner.nextDouble();
-
+            long peso = scanner.nextLong();
 
             G.addEdge(new DirectedEdge(a, b, peso));
             G.addEdge(new DirectedEdge(b, a, peso));
         }
 
         Dijkstra dijkstra = new Dijkstra(G);
-
         List<Integer> caminho = dijkstra.caminho(1, n);
 
+        if (caminho.isEmpty()) {
+            System.out.println("-1");
+        } else {
+            StringBuilder sb = new StringBuilder();
             for (int v : caminho) {
-                System.out.print(v + " ");
+                sb.append(v).append(" ");
             }
-
+            System.out.println(sb.toString().trim());
+        }
 
         scanner.close();
+    }
+
+static class FastReader {
+        BufferedReader br;
+        StringTokenizer st;
+
+        public FastReader() {
+            br = new BufferedReader(new InputStreamReader(System.in));
+        }
+
+        public FastReader(String fileName) throws IOException {
+            br = new BufferedReader(new FileReader(fileName));
+        }
+
+        String next() {
+            while (st == null || !st.hasMoreElements()) {
+                try {
+                    String line = br.readLine();
+                    if (line == null) return null;
+                    st = new StringTokenizer(line);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            return st.nextToken();
+        }
+
+        int nextInt() {
+            return Integer.parseInt(next());
+        }
+
+        long nextLong() {
+            return Long.parseLong(next());
+        }
+
+        void close() {
+            try {
+                if (br != null) br.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
 
 class Bag<Item> implements Iterable<Item> {
     private Node<Item> first;    
-    private int n;               
+    private int n;                
 
     private static class Node<Item> {
         private Item item;
@@ -81,14 +112,6 @@ class Bag<Item> implements Iterable<Item> {
     public Bag() {
         first = null;
         n = 0;
-    }
-
-    public boolean isEmpty() {
-        return first == null;
-    }
-
-    public int size() {
-        return n;
     }
 
     public void add(Item item) {
@@ -121,45 +144,29 @@ class Bag<Item> implements Iterable<Item> {
             return item;
         }
     }
-
-    public static void main(String[] args) {
-        Bag<String> bag = new Bag<String>();
-        while (!StdIn.isEmpty()) {
-            String item = StdIn.readString();
-            bag.add(item);
-        }
-
-        StdOut.println("size of bag = " + bag.size());
-        for (String s : bag) {
-            StdOut.println(s);
-        }
-    }
-
 }
 
 class Dijkstra {
-
     private DirectedEdge[] edgeTo;
-    private double[] distTo;
-    private IndexMinPQ<Double> pq;
+    private long[] distTo;
+    private IndexMinPQ pq;
     private EdgeWeightedDigraph G;
 
     public Dijkstra(EdgeWeightedDigraph G) {
         this.G = G;
         edgeTo = new DirectedEdge[G.V()];
-        distTo = new double[G.V()];
-        pq = new IndexMinPQ<>(G.V());
+        distTo = new long[G.V()];
+        pq = new IndexMinPQ(G.V());
     }
 
     public List<Integer> caminho(int origem, int destino) {
-
-
         for(int i = 1; i < distTo.length; i++) {
-            distTo[i] = Double.POSITIVE_INFINITY;
+            distTo[i] = Long.MAX_VALUE;
         }
 
-        distTo[origem] = 0.0;
+        distTo[origem] = 0;
         pq.insert(origem, distTo[origem]);
+        
         while (!pq.isEmpty()) {
             int v = pq.delMin();
             
@@ -167,7 +174,7 @@ class Dijkstra {
                 int atual = e.from();
                 int novo = e.to();
 
-                if(distTo[novo] > distTo[atual] + e.weight()) {
+                if(distTo[atual] != Long.MAX_VALUE && distTo[novo] > distTo[atual] + e.weight()) {
                     distTo[novo] = distTo[atual] + e.weight();
                     edgeTo[novo] = e;
 
@@ -177,1143 +184,91 @@ class Dijkstra {
                         pq.insert(novo, distTo[novo]);
                     }
                 }
-                
             }
         }
 
-
-        if (distTo[destino] == Double.POSITIVE_INFINITY) {
+        if (distTo[destino] == Long.MAX_VALUE) {
             return new ArrayList<>();
         }
 
         List<Integer> caminho = new ArrayList<>();
-
         int atual = destino;
 
         while (atual != origem) {
-
             caminho.add(atual);
-
             atual = edgeTo[atual].from();
         }
-
         caminho.add(origem);
-
         Collections.reverse(caminho);
 
         return caminho;
     }
-     
 }
 
 class DirectedEdge {
     private final int v;
     private final int w;
-    private final double weight;
+    private final long weight;
 
-    public DirectedEdge(int v, int w, double weight) {
-        if (v < 0) throw new IllegalArgumentException("Vertex names must be non-negative integers");
-        if (w < 0) throw new IllegalArgumentException("Vertex names must be non-negative integers");
-        if (Double.isNaN(weight)) throw new IllegalArgumentException("Weight is NaN");
+    public DirectedEdge(int v, int w, long weight) {
         this.v = v;
         this.w = w;
         this.weight = weight;
     }
 
-    public int from() {
-        return v;
-    }
-
-    public int to() {
-        return w;
-    }
-
-    public double weight() {
-        return weight;
-    }
-
-    public String toString() {
-        return v + "->" + w + " " + String.format("%5.2f", weight);
-    }
-
-    public static void main(String[] args) {
-        DirectedEdge e = new DirectedEdge(12, 34, 5.67);
-        StdOut.println(e);
-    }
+    public int from() { return v; }
+    public int to() { return w; }
+    public long weight() { return weight; }
 }
 
 class EdgeWeightedDigraph {
-    private static final String NEWLINE = System.getProperty("line.separator");
-
     private final int V;                
     private int E;                      
     private Bag<DirectedEdge>[] adj;    
-    private int[] indegree;             
 
+    @SuppressWarnings("unchecked")
     public EdgeWeightedDigraph(int V) {
-        if (V < 0) throw new IllegalArgumentException("Number of vertices in a Digraph must be non-negative");
         this.V = V;
         this.E = 0;
-        this.indegree = new int[V];
         adj = (Bag<DirectedEdge>[]) new Bag[V];
         for (int v = 0; v < V; v++)
             adj[v] = new Bag<DirectedEdge>();
     }
 
-    public EdgeWeightedDigraph(In in) {
-        if (in == null) throw new IllegalArgumentException("argument is null");
-        try {
-            this.V = in.readInt();
-            if (V < 0) throw new IllegalArgumentException("number of vertices in a Digraph must be non-negative");
-            indegree = new int[V];
-            adj = (Bag<DirectedEdge>[]) new Bag[V];
-            for (int v = 0; v < V; v++) {
-                adj[v] = new Bag<DirectedEdge>();
-            }
-
-            int E = in.readInt();
-            if (E < 0) throw new IllegalArgumentException("Number of edges must be non-negative");
-            for (int i = 0; i < E; i++) {
-                int v = in.readInt();
-                int w = in.readInt();
-                validateVertex(v);
-                validateVertex(w);
-                double weight = in.readDouble();
-                addEdge(new DirectedEdge(v, w, weight));
-            }
-        }
-        catch (NoSuchElementException e) {
-            throw new IllegalArgumentException("invalid input format in EdgeWeightedDigraph constructor", e);
-        }
-    }
-
-    public EdgeWeightedDigraph(EdgeWeightedDigraph G) {
-        this(G.V());
-        this.E = G.E();
-        for (int v = 0; v < G.V(); v++)
-            this.indegree[v] = G.indegree(v);
-        for (int v = 0; v < G.V(); v++) {
-            Stack<DirectedEdge> reverse = new Stack<DirectedEdge>();
-            for (DirectedEdge e : G.adj[v]) {
-                reverse.push(e);
-            }
-            for (DirectedEdge e : reverse) {
-                adj[v].add(e);
-            }
-        }
-    }
-
-    public int V() {
-        return V;
-    }
-
-    public int E() {
-        return E;
-    }
-
-    private void validateVertex(int v) {
-        if (v < 0 || v >= V)
-            throw new IllegalArgumentException("vertex " + v + " is not between 0 and " + (V-1));
-    }
+    public int V() { return V; }
 
     public void addEdge(DirectedEdge e) {
         int v = e.from();
-        int w = e.to();
-        validateVertex(v);
-        validateVertex(w);
         adj[v].add(e);
-        indegree[w]++;
         E++;
     }
 
     public Iterable<DirectedEdge> adj(int v) {
-        validateVertex(v);
         return adj[v];
     }
-
-    public int outdegree(int v) {
-        validateVertex(v);
-        return adj[v].size();
-    }
-
-    public int indegree(int v) {
-        validateVertex(v);
-        return indegree[v];
-    }
-
-    public Iterable<DirectedEdge> edges() {
-        Bag<DirectedEdge> list = new Bag<DirectedEdge>();
-        for (int v = 0; v < V; v++) {
-            for (DirectedEdge e : adj(v)) {
-                list.add(e);
-            }
-        }
-        return list;
-    }
-
-    public String toString() {
-        StringBuilder s = new StringBuilder();
-        s.append(V + " " + E + NEWLINE);
-        for (int v = 0; v < V; v++) {
-            s.append(v + ": ");
-            for (DirectedEdge e : adj[v]) {
-                s.append(e + "  ");
-            }
-            s.append(NEWLINE);
-        }
-        return s.toString();
-    }
-
-    public String toDot() {
-        StringBuilder s = new StringBuilder();
-        s.append("digraph {" + NEWLINE);
-        s.append("node[shape=circle, style=filled, fixedsize=true, width=0.3, fontsize=\"10pt\"]" + NEWLINE);
-        s.append("edge[arrowhead=normal, fontsize=\"9pt\"]" + NEWLINE);
-        for (int v = 0; v < V; v++) {
-            for (DirectedEdge e : adj[v]) {
-                int w = e.to();
-                s.append(v + " -> " + w + " [label=\"" + e.weight() + "\"]" + NEWLINE);
-            }
-        }
-        s.append("}" + NEWLINE);
-        return s.toString();
-    }
-
-    public static void main(String[] args) {
-        In in = new In(args[0]);
-        EdgeWeightedDigraph G = new EdgeWeightedDigraph(in);
-        StdOut.println(G);
-    }
-
 }
-
-final class In {
-
-    private static final String CHARSET_NAME = "UTF-8";
-
-    private static final Locale LOCALE = Locale.US;
-
-    private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\p{javaWhitespace}+");
-
-    private static final Pattern EMPTY_PATTERN = Pattern.compile("");
-
-    private static final Pattern EVERYTHING_PATTERN = Pattern.compile("\\A");
-
-    private Scanner scanner;
-
-    public In() {
-        scanner = new Scanner(new BufferedInputStream(System.in), CHARSET_NAME);
-        scanner.useLocale(LOCALE);
-    }
-
-    public In(Socket socket) {
-        if (socket == null) throw new IllegalArgumentException("socket argument is null");
-        try {
-            InputStream is = socket.getInputStream();
-            scanner = new Scanner(new BufferedInputStream(is), CHARSET_NAME);
-            scanner.useLocale(LOCALE);
-        }
-        catch (IOException ioe) {
-            throw new IllegalArgumentException("could not open socket: " + socket, ioe);
-        }
-    }
-
-    public In(URL url) {
-        if (url == null) throw new IllegalArgumentException("url argument is null");
-        try {
-            URLConnection site = url.openConnection();
-            InputStream is     = site.getInputStream();
-            scanner            = new Scanner(new BufferedInputStream(is), CHARSET_NAME);
-            scanner.useLocale(LOCALE);
-        }
-        catch (IOException ioe) {
-            throw new IllegalArgumentException("could not read URL: '" + url + "'", ioe);
-        }
-    }
-
-    public In(File file) {
-        if (file == null) throw new IllegalArgumentException("file argument is null");
-        try {
-            FileInputStream fis = new FileInputStream(file);
-            scanner = new Scanner(new BufferedInputStream(fis), CHARSET_NAME);
-            scanner.useLocale(LOCALE);
-        }
-        catch (IOException ioe) {;
-            throw new IllegalArgumentException("could not read file: " + file, ioe);
-        }
-    }
-
-    public In(String name) {
-        if (name == null) throw new IllegalArgumentException("argument is null");
-        if (name.length() == 0) throw new IllegalArgumentException("argument is the empty string");
-        try {
-            File file = new File(name);
-            if (file.exists()) {
-                FileInputStream fis = new FileInputStream(file);
-                scanner = new Scanner(new BufferedInputStream(fis), CHARSET_NAME);
-                scanner.useLocale(LOCALE);
-                return;
-            }
-
-            URL url = getClass().getResource(name);
-
-            if (url == null) {
-                url = getClass().getClassLoader().getResource(name);
-            }
-
-            if (url == null) {
-                URI uri = new URI(name);
-                if (uri.isAbsolute()) url = uri.toURL();
-                else throw new IllegalArgumentException("could not read: '" + name + "'");
-                url = new URL(name);
-            }
-
-            URLConnection site = url.openConnection();
-
-            InputStream is     = site.getInputStream();
-            scanner            = new Scanner(new BufferedInputStream(is), CHARSET_NAME);
-            scanner.useLocale(LOCALE);
-        }
-        catch (IOException | URISyntaxException e) {
-            throw new IllegalArgumentException("could not read: '" + name + "'");
-        }
-    }
-
-    public In(Scanner scanner) {
-        if (scanner == null) throw new IllegalArgumentException("scanner argument is null");
-        this.scanner = scanner;
-    }
-
-    public boolean exists()  {
-        return scanner != null;
-    }
-
-    public boolean isEmpty() {
-        return !scanner.hasNext();
-    }
-
-    public boolean hasNextLine() {
-        return scanner.hasNextLine();
-    }
-
-    public boolean hasNextChar() {
-        scanner.useDelimiter(EMPTY_PATTERN);
-        boolean result = scanner.hasNext();
-        scanner.useDelimiter(WHITESPACE_PATTERN);
-        return result;
-    }
-
-    public String readLine() {
-        String line;
-        try {
-            line = scanner.nextLine();
-        }
-        catch (NoSuchElementException e) {
-            line = null;
-        }
-        return line;
-    }
-
-    public char readChar() {
-        scanner.useDelimiter(EMPTY_PATTERN);
-        try {
-            String ch = scanner.next();
-            assert ch.length() == 1 : "Internal (Std)In.readChar() error!"
-                + " Please contact the authors.";
-            scanner.useDelimiter(WHITESPACE_PATTERN);
-            return ch.charAt(0);
-        }
-        catch (NoSuchElementException e) {
-            throw new NoSuchElementException("attempts to read a 'char' value from the input stream, "
-                                           + "but no more tokens are available");
-        }
-    }
-
-    public String readAll() {
-        if (!scanner.hasNextLine())
-            return "";
-
-        String result = scanner.useDelimiter(EVERYTHING_PATTERN).next();
-        scanner.useDelimiter(WHITESPACE_PATTERN); 
-        return result;
-    }
-
-    public String readString() {
-        try {
-            return scanner.next();
-        }
-        catch (NoSuchElementException e) {
-            throw new NoSuchElementException("attempts to read a 'String' value from the input stream, "
-                                           + "but no more tokens are available");
-        }
-    }
-
-    public int readInt() {
-        try {
-            return scanner.nextInt();
-        }
-        catch (InputMismatchException e) {
-            String token = scanner.next();
-            throw new InputMismatchException("attempts to read an 'int' value from the input stream, "
-                                           + "but the next token is \"" + token + "\"");
-        }
-        catch (NoSuchElementException e) {
-            throw new NoSuchElementException("attemps to read an 'int' value from the input stream, "
-                                           + "but no more tokens are available");
-        }
-    }
-
-    public double readDouble() {
-        try {
-            return scanner.nextDouble();
-        }
-        catch (InputMismatchException e) {
-            String token = scanner.next();
-            throw new InputMismatchException("attempts to read a 'double' value from the input stream, "
-                                           + "but the next token is \"" + token + "\"");
-        }
-        catch (NoSuchElementException e) {
-            throw new NoSuchElementException("attemps to read a 'double' value from the input stream, "
-                                           + "but no more tokens are available");
-        }
-    }
-
-    public float readFloat() {
-        try {
-            return scanner.nextFloat();
-        }
-        catch (InputMismatchException e) {
-            String token = scanner.next();
-            throw new InputMismatchException("attempts to read a 'float' value from the input stream, "
-                                           + "but the next token is \"" + token + "\"");
-        }
-        catch (NoSuchElementException e) {
-            throw new NoSuchElementException("attemps to read a 'float' value from the input stream, "
-                                           + "but no more tokens are available");
-        }
-    }
-
-    public long readLong() {
-        try {
-            return scanner.nextLong();
-        }
-        catch (InputMismatchException e) {
-            String token = scanner.next();
-            throw new InputMismatchException("attempts to read a 'long' value from the input stream, "
-                                           + "but the next token is \"" + token + "\"");
-        }
-        catch (NoSuchElementException e) {
-            throw new NoSuchElementException("attemps to read a 'long' value from the input stream, "
-                                           + "but no more tokens are available");
-        }
-    }
-
-    public short readShort() {
-        try {
-            return scanner.nextShort();
-        }
-        catch (InputMismatchException e) {
-            String token = scanner.next();
-            throw new InputMismatchException("attempts to read a 'short' value from the input stream, "
-                                           + "but the next token is \"" + token + "\"");
-        }
-        catch (NoSuchElementException e) {
-            throw new NoSuchElementException("attemps to read a 'short' value from the input stream, "
-                                           + "but no more tokens are available");
-        }
-    }
-
-    public byte readByte() {
-        try {
-            return scanner.nextByte();
-        }
-        catch (InputMismatchException e) {
-            String token = scanner.next();
-            throw new InputMismatchException("attempts to read a 'byte' value from the input stream, "
-                                           + "but the next token is \"" + token + "\"");
-        }
-        catch (NoSuchElementException e) {
-            throw new NoSuchElementException("attemps to read a 'byte' value from the input stream, "
-                                           + "but no more tokens are available");
-        }
-    }
-
-    public boolean readBoolean() {
-        try {
-            String token = readString();
-            if ("true".equalsIgnoreCase(token))  return true;
-            if ("false".equalsIgnoreCase(token)) return false;
-            if ("1".equals(token))               return true;
-            if ("0".equals(token))               return false;
-            throw new InputMismatchException("attempts to read a 'boolean' value from the input stream, "
-                                           + "but the next token is \"" + token + "\"");
-        }
-        catch (NoSuchElementException e) {
-            throw new NoSuchElementException("attempts to read a 'boolean' value from the input stream, "
-                                           + "but no more tokens are available");
-        }
-    }
-
-    public String[] readAllStrings() {
-        String[] tokens = WHITESPACE_PATTERN.split(readAll());
-        if (tokens.length == 0 || tokens[0].length() > 0)
-            return tokens;
-        String[] decapitokens = new String[tokens.length-1];
-        for (int i = 0; i < tokens.length-1; i++)
-            decapitokens[i] = tokens[i+1];
-        return decapitokens;
-    }
-
-    public String[] readAllLines() {
-        ArrayList<String> lines = new ArrayList<String>();
-        while (hasNextLine()) {
-            lines.add(readLine());
-        }
-        return lines.toArray(new String[0]);
-    }
-
-
-    public int[] readAllInts() {
-        String[] fields = readAllStrings();
-        int[] vals = new int[fields.length];
-        for (int i = 0; i < fields.length; i++)
-            vals[i] = Integer.parseInt(fields[i]);
-        return vals;
-    }
-
-    public long[] readAllLongs() {
-        String[] fields = readAllStrings();
-        long[] vals = new long[fields.length];
-        for (int i = 0; i < fields.length; i++)
-            vals[i] = Long.parseLong(fields[i]);
-        return vals;
-    }
-
-    public double[] readAllDoubles() {
-        String[] fields = readAllStrings();
-        double[] vals = new double[fields.length];
-        for (int i = 0; i < fields.length; i++)
-            vals[i] = Double.parseDouble(fields[i]);
-        return vals;
-    }
-
-    public void close() {
-        scanner.close();
-    }
-
-    @Deprecated
-    public static int[] readInts(String filename) {
-        return new In(filename).readAllInts();
-    }
-
-    @Deprecated
-    public static double[] readDoubles(String filename) {
-        return new In(filename).readAllDoubles();
-    }
-
-    @Deprecated
-    public static String[] readStrings(String filename) {
-        return new In(filename).readAllStrings();
-    }
-
-    @Deprecated
-    public static int[] readInts() {
-        return new In().readAllInts();
-    }
-
-    @Deprecated
-    public static double[] readDoubles() {
-        return new In().readAllDoubles();
-    }
-
-    @Deprecated
-    public static String[] readStrings() {
-        return new In().readAllStrings();
-    }
-
-    public static void main(String[] args) {
-        In in;
-        String urlName = "https://introcs.cs.princeton.edu/java/stdlib/InTest.txt";
-
-        System.out.println("readAll() from URL " + urlName);
-        System.out.println("---------------------------------------------------------------------------");
-        try {
-            in = new In(urlName);
-            System.out.println(in.readAll());
-        }
-        catch (IllegalArgumentException e) {
-            System.out.println(e);
-        }
-        System.out.println();
-
-        System.out.println("readLine() from URL " + urlName);
-        System.out.println("---------------------------------------------------------------------------");
-        try {
-            in = new In(urlName);
-            while (!in.isEmpty()) {
-                String s = in.readLine();
-                System.out.println(s);
-            }
-        }
-        catch (IllegalArgumentException e) {
-            System.out.println(e);
-        }
-        System.out.println();
-
-        System.out.println("readString() from URL " + urlName);
-        System.out.println("---------------------------------------------------------------------------");
-        try {
-            in = new In(urlName);
-            while (!in.isEmpty()) {
-                String s = in.readString();
-                System.out.println(s);
-            }
-        }
-        catch (IllegalArgumentException e) {
-            System.out.println(e);
-        }
-        System.out.println();
-
-
-        System.out.println("readLine() from current directory");
-        System.out.println("---------------------------------------------------------------------------");
-        try {
-            in = new In("./InTest.txt");
-            while (!in.isEmpty()) {
-                String s = in.readLine();
-                System.out.println(s);
-            }
-        }
-        catch (IllegalArgumentException e) {
-            System.out.println(e);
-        }
-        System.out.println();
-
-
-        System.out.println("readLine() from relative path");
-        System.out.println("---------------------------------------------------------------------------");
-        try {
-            in = new In("../stdlib/InTest.txt");
-            while (!in.isEmpty()) {
-                String s = in.readLine();
-                System.out.println(s);
-            }
-        }
-        catch (IllegalArgumentException e) {
-            System.out.println(e);
-        }
-        System.out.println();
-
-        System.out.println("readChar() from file");
-        System.out.println("---------------------------------------------------------------------------");
-        try {
-            in = new In("InTest.txt");
-            while (!in.isEmpty()) {
-                char c = in.readChar();
-                System.out.print(c);
-            }
-        }
-        catch (IllegalArgumentException e) {
-            System.out.println(e);
-        }
-        System.out.println();
-        System.out.println();
-
-        System.out.println("readLine() from absolute OS X / Linux path");
-        System.out.println("---------------------------------------------------------------------------");
-        try {
-            in = new In("/n/fs/introcs/www/java/stdlib/InTest.txt");
-            while (!in.isEmpty()) {
-                String s = in.readLine();
-                System.out.println(s);
-            }
-        }
-        catch (IllegalArgumentException e) {
-            System.out.println(e);
-        }
-        System.out.println();
-
-
-        System.out.println("readLine() from absolute Windows path");
-        System.out.println("---------------------------------------");
-    }
-}
-
-class Stack<Item> implements Iterable<Item> {
-    private Node<Item> first;     
-    private int n;                
-
-    private static class Node<Item> {
-        private Item item;
-        private Node<Item> next;
-    }
-
-    public Stack() {
-        first = null;
-        n = 0;
-    }
-
-    public boolean isEmpty() {
-        return first == null;
-    }
-
-    public int size() {
-        return n;
-    }
-
-    public void push(Item item) {
-        Node<Item> oldfirst = first;
-        first = new Node<Item>();
-        first.item = item;
-        first.next = oldfirst;
-        n++;
-    }
-
-    public Item pop() {
-        if (isEmpty()) throw new NoSuchElementException("Stack underflow");
-        Item item = first.item;        
-        first = first.next;            
-        n--;
-        return item;                   
-    }
-
-    public Item peek() {
-        if (isEmpty()) throw new NoSuchElementException("Stack underflow");
-        return first.item;
-    }
-
-    public String toString() {
-        StringBuilder s = new StringBuilder();
-        for (Item item : this) {
-            s.append(item);
-            s.append(' ');
-        }
-        return s.toString();
-    }
-
-    public Iterator<Item> iterator() {
-        return new LinkedIterator(first);
-    }
-
-    private class LinkedIterator implements Iterator<Item> {
-        private Node<Item> current;
-
-        public LinkedIterator(Node<Item> first) {
-            current = first;
-        }
-
-        public boolean hasNext() {
-            return current != null;
-        }
-
-        public Item next() {
-            if (!hasNext()) throw new NoSuchElementException();
-            Item item = current.item;
-            current = current.next;
-            return item;
-        }
-    }
-
-    public static void main(String[] args) {
-        Stack<String> stack = new Stack<String>();
-        while (!StdIn.isEmpty()) {
-            String item = StdIn.readString();
-            if (!item.equals("-"))
-                stack.push(item);
-            else if (!stack.isEmpty())
-                StdOut.print(stack.pop() + " ");
-        }
-        StdOut.println("(" + stack.size() + " left on stack)");
-    }
-}
-
-final class StdOut {
-
-    private static final Charset CHARSET = StandardCharsets.UTF_8;
-    private static final Locale LOCALE = Locale.US;
-    private static PrintWriter out;
-
-    static {
-        out = new PrintWriter(new OutputStreamWriter(System.out, CHARSET), true);
-    }
-
-    private StdOut() { }
-
-    public static void println() {
-        out.println();
-    }
-
-    public static void println(Object x) {
-        out.println(x);
-    }
-
-    public static void println(boolean x) {
-        out.println(x);
-    }
-
-    public static void println(char x) {
-        out.println(x);
-    }
-
-    public static void println(double x) {
-        out.println(x);
-    }
-
-    public static void println(float x) {
-        out.println(x);
-    }
-
-    public static void println(int x) {
-        out.println(x);
-    }
-
-    public static void println(long x) {
-        out.println(x);
-    }
-
-    public static void println(short x) {
-        out.println(x);
-    }
-
-    public static void println(byte x) {
-        out.println(x);
-    }
-
-    public static void print() {
-        out.flush();
-    }
-
-    public static void print(Object x) {
-        out.print(x);
-        out.flush();
-    }
-
-    public static void print(boolean x) {
-        out.print(x);
-        out.flush();
-    }
-
-    public static void print(char x) {
-        out.print(x);
-        out.flush();
-    }
-
-    public static void print(double x) {
-        out.print(x);
-        out.flush();
-    }
-
-    public static void print(float x) {
-        out.print(x);
-        out.flush();
-    }
-
-    public static void print(int x) {
-        out.print(x);
-        out.flush();
-    }
-
-    public static void print(long x) {
-        out.print(x);
-        out.flush();
-    }
-
-    public static void print(short x) {
-        out.print(x);
-        out.flush();
-    }
-
-    public static void print(byte x) {
-        out.print(x);
-        out.flush();
-    }
-
-    public static void printf(String format, Object... args) {
-        out.printf(LOCALE, format, args);
-        out.flush();
-    }
-
-    public static void printf(Locale locale, String format, Object... args) {
-        out.printf(locale, format, args);
-        out.flush();
-    }
-
-    public static void main(String[] args) {
-        StdOut.println("Test");
-        StdOut.println(17);
-        StdOut.println(true);
-        StdOut.printf("%.6f\n", 1.0/7.0);
-    }
-}
-
-final class StdIn {
-
-    private static final String CHARSET_NAME = "UTF-8";
-    private static final Locale LOCALE = Locale.US;
-    private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\p{javaWhitespace}+");
-    private static final Pattern EMPTY_PATTERN = Pattern.compile("");
-    private static final Pattern EVERYTHING_PATTERN = Pattern.compile("\\A");
-
-    private static Scanner scanner;
-
-    private StdIn() { }
-
-    public static boolean isEmpty() {
-        return !scanner.hasNext();
-    }
-
-    public static boolean hasNextLine() {
-        return scanner.hasNextLine();
-    }
-
-    public static boolean hasNextChar() {
-        scanner.useDelimiter(EMPTY_PATTERN);
-        boolean result = scanner.hasNext();
-        scanner.useDelimiter(WHITESPACE_PATTERN);
-        return result;
-    }
-
-    public static String readLine() {
-        String line;
-        try {
-            line = scanner.nextLine();
-        }
-        catch (NoSuchElementException e) {
-            line = null;
-        }
-        return line;
-    }
-
-    public static char readChar() {
-        try {
-            scanner.useDelimiter(EMPTY_PATTERN);
-            String ch = scanner.next();
-            assert ch.length() == 1 : "Internal (Std)In.readChar() error! Please contact the authors.";
-            scanner.useDelimiter(WHITESPACE_PATTERN);
-            return ch.charAt(0);
-        }
-        catch (NoSuchElementException e) {
-            throw new NoSuchElementException("attempts to read a 'char' value from standard input, but no more tokens are available");
-        }
-    }
-
-    public static String readAll() {
-        if (!scanner.hasNextLine())
-            return "";
-
-        String result = scanner.useDelimiter(EVERYTHING_PATTERN).next();
-        scanner.useDelimiter(WHITESPACE_PATTERN);
-        return result;
-    }
-
-    public static String readString() {
-        try {
-            return scanner.next();
-        }
-        catch (NoSuchElementException e) {
-            throw new NoSuchElementException("attempts to read a 'String' value from standard input, but no more tokens are available");
-        }
-    }
-
-    public static int readInt() {
-        try {
-            return scanner.nextInt();
-        }
-        catch (InputMismatchException e) {
-            String token = scanner.next();
-            throw new InputMismatchException("attempts to read an 'int' value from standard input, but the next token is \"" + token + "\"");
-        }
-        catch (NoSuchElementException e) {
-            throw new NoSuchElementException("attemps to read an 'int' value from standard input, but no more tokens are available");
-        }
-    }
-
-    public static double readDouble() {
-        try {
-            return scanner.nextDouble();
-        }
-        catch (InputMismatchException e) {
-            String token = scanner.next();
-            throw new InputMismatchException("attempts to read a 'double' value from standard input, but the next token is \"" + token + "\"");
-        }
-        catch (NoSuchElementException e) {
-            throw new NoSuchElementException("attempts to read a 'double' value from standard input, but no more tokens are available");
-        }
-    }
-
-    public static float readFloat() {
-        try {
-            return scanner.nextFloat();
-        }
-        catch (InputMismatchException e) {
-            String token = scanner.next();
-            throw new InputMismatchException("attempts to read a 'float' value from standard input, but the next token is \"" + token + "\"");
-        }
-        catch (NoSuchElementException e) {
-            throw new NoSuchElementException("attempts to read a 'float' value from standard input, but there no more tokens are available");
-        }
-    }
-
-    public static long readLong() {
-        try {
-            return scanner.nextLong();
-        }
-        catch (InputMismatchException e) {
-            String token = scanner.next();
-            throw new InputMismatchException("attempts to read a 'long' value from standard input, but the next token is \"" + token + "\"");
-        }
-        catch (NoSuchElementException e) {
-            throw new NoSuchElementException("attempts to read a 'long' value from standard input, but no more tokens are available");
-        }
-    }
-
-    public static short readShort() {
-        try {
-            return scanner.nextShort();
-        }
-        catch (InputMismatchException e) {
-            String token = scanner.next();
-            throw new InputMismatchException("attempts to read a 'short' value from standard input, but the next token is \"" + token + "\"");
-        }
-        catch (NoSuchElementException e) {
-            throw new NoSuchElementException("attempts to read a 'short' value from standard input, but no more tokens are available");
-        }
-    }
-
-    public static byte readByte() {
-        try {
-            return scanner.nextByte();
-        }
-        catch (InputMismatchException e) {
-            String token = scanner.next();
-            throw new InputMismatchException("attempts to read a 'byte' value from standard input, but the next token is \"" + token + "\"");
-        }
-        catch (NoSuchElementException e) {
-            throw new NoSuchElementException("attempts to read a 'byte' value from standard input, but no more tokens are available");
-        }
-    }
-
-    public static boolean readBoolean() {
-        try {
-            String token = readString();
-            if ("true".equalsIgnoreCase(token))  return true;
-            if ("false".equalsIgnoreCase(token)) return false;
-            if ("1".equals(token))               return true;
-            if ("0".equals(token))               return false;
-            throw new InputMismatchException("attempts to read a 'boolean' value from standard input, but the next token is \"" + token + "\"");
-        }
-        catch (NoSuchElementException e) {
-            throw new NoSuchElementException("attempts to read a 'boolean' value from standard input, but no more tokens are available");
-        }
-    }
-
-    public static String[] readAllStrings() {
-        String[] tokens = WHITESPACE_PATTERN.split(readAll());
-        if (tokens.length == 0 || tokens[0].length() > 0)
-            return tokens;
-
-        String[] decapitokens = new String[tokens.length - 1];
-        for (int i = 0; i < tokens.length - 1; i++)
-            decapitokens[i] = tokens[i + 1];
-        return decapitokens;
-    }
-
-    public static String[] readAllLines() {
-        ArrayList<String> lines = new ArrayList<String>();
-        while (hasNextLine()) {
-            lines.add(readLine());
-        }
-        return lines.toArray(new String[0]);
-    }
-
-    public static int[] readAllInts() {
-        String[] fields = readAllStrings();
-        int[] vals = new int[fields.length];
-        for (int i = 0; i < fields.length; i++)
-            vals[i] = Integer.parseInt(fields[i]);
-        return vals;
-    }
-
-    public static long[] readAllLongs() {
-        String[] fields = readAllStrings();
-        long[] vals = new long[fields.length];
-        for (int i = 0; i < fields.length; i++)
-            vals[i] = Long.parseLong(fields[i]);
-        return vals;
-    }
-
-    public static double[] readAllDoubles() {
-        String[] fields = readAllStrings();
-        double[] vals = new double[fields.length];
-        for (int i = 0; i < fields.length; i++)
-            vals[i] = Double.parseDouble(fields[i]);
-        return vals;
-    }
-
-    static {
-        resync();
-    }
-
-    private static void resync() {
-        setScanner(new Scanner(new java.io.BufferedInputStream(System.in), CHARSET_NAME));
-    }
-
-    private static void setScanner(Scanner scanner) {
-        StdIn.scanner = scanner;
-        StdIn.scanner.useLocale(LOCALE);
-    }
-
-    @Deprecated
-    public static int[] readInts() {
-        return readAllInts();
-    }
-
-    @Deprecated
-    public static double[] readDoubles() {
-        return readAllDoubles();
-    }
-
-    @Deprecated
-    public static String[] readStrings() {
-        return readAllStrings();
-    }
-}
-
-class IndexMinPQ<Key extends Comparable<Key>> implements Iterable<Integer> {
+class IndexMinPQ {
     private int maxN;        
     private int n;           
     private int[] pq;        
     private int[] qp;        
-    private Key[] keys;      
+    private long[] keys;      
 
-    @SuppressWarnings("unchecked")
     public IndexMinPQ(int maxN) {
-        if (maxN < 0) throw new IllegalArgumentException();
         this.maxN = maxN;
         n = 0;
-        keys = (Key[]) new Comparable[maxN + 1];    
+        keys = new long[maxN + 1];    
         pq   = new int[maxN + 1];
         qp   = new int[maxN + 1];                   
         for (int i = 0; i <= maxN; i++)
             qp[i] = -1;
     }
 
-    public boolean isEmpty() {
-        return n == 0;
-    }
+    public boolean isEmpty() { return n == 0; }
 
-    public boolean contains(int i) {
-        validateIndex(i);
-        return qp[i] != -1;
-    }
+    public boolean contains(int i) { return qp[i] != -1; }
 
-    public int size() {
-        return n;
-    }
-
-    public void insert(int i, Key key) {
-        validateIndex(i);
-        if (contains(i)) throw new IllegalArgumentException("index is already in the priority queue");
+    public void insert(int i, long key) {
         n++;
         qp[i] = n;
         pq[n] = i;
@@ -1321,87 +276,23 @@ class IndexMinPQ<Key extends Comparable<Key>> implements Iterable<Integer> {
         swim(n);
     }
 
-    public int minIndex() {
-        if (n == 0) throw new NoSuchElementException("Priority queue underflow");
-        return pq[1];
-    }
-
-    public Key minKey() {
-        if (n == 0) throw new NoSuchElementException("Priority queue underflow");
-        return keys[pq[1]];
-    }
-
     public int delMin() {
-        if (n == 0) throw new NoSuchElementException("Priority queue underflow");
         int min = pq[1];
         exch(1, n--);
         sink(1);
-        assert min == pq[n+1];
         qp[min] = -1;        
-        keys[min] = null;    
         pq[n+1] = -1;        
         return min;
     }
 
-    public Key keyOf(int i) {
-        validateIndex(i);
-        if (!contains(i)) throw new NoSuchElementException("index is not in the priority queue");
-        else return keys[i];
-    }
-
-    public void changeKey(int i, Key key) {
-        validateIndex(i);
-        if (!contains(i)) throw new NoSuchElementException("index is not in the priority queue");
+    public void changeKey(int i, long key) {
         keys[i] = key;
         swim(qp[i]);
         sink(qp[i]);
-    }
-
-    @Deprecated
-    public void change(int i, Key key) {
-        changeKey(i, key);
-    }
-
-    public void decreaseKey(int i, Key key) {
-        validateIndex(i);
-        if (!contains(i)) throw new NoSuchElementException("index is not in the priority queue");
-        if (keys[i].compareTo(key) == 0)
-            throw new IllegalArgumentException("Calling decreaseKey() with a key equal to the key in the priority queue");
-        if (keys[i].compareTo(key) < 0)
-            throw new IllegalArgumentException("Calling decreaseKey() with a key strictly greater than the key in the priority queue");
-        keys[i] = key;
-        swim(qp[i]);
-    }
-
-    public void increaseKey(int i, Key key) {
-        validateIndex(i);
-        if (!contains(i)) throw new NoSuchElementException("index is not in the priority queue");
-        if (keys[i].compareTo(key) == 0)
-            throw new IllegalArgumentException("Calling increaseKey() with a key equal to the key in the priority queue");
-        if (keys[i].compareTo(key) > 0)
-            throw new IllegalArgumentException("Calling increaseKey() with a key strictly less than the key in the priority queue");
-        keys[i] = key;
-        sink(qp[i]);
-    }
-
-    public void delete(int i) {
-        validateIndex(i);
-        if (!contains(i)) throw new NoSuchElementException("index is not in the priority queue");
-        int index = qp[i];
-        exch(index, n--);
-        swim(index);
-        sink(index);
-        keys[i] = null;
-        qp[i] = -1;
-    }
-
-    private void validateIndex(int i) {
-        if (i < 0) throw new IllegalArgumentException("index is negative: " + i);
-        if (i >= maxN) throw new IllegalArgumentException("index >= capacity: " + i);
     }
 
     private boolean greater(int i, int j) {
-        return keys[pq[i]].compareTo(keys[pq[j]]) > 0;
+        return keys[pq[i]] > keys[pq[j]];
     }
 
     private void exch(int i, int j) {
@@ -1426,53 +317,6 @@ class IndexMinPQ<Key extends Comparable<Key>> implements Iterable<Integer> {
             if (!greater(k, j)) break;
             exch(k, j);
             k = j;
-        }
-    }
-
-    public Iterator<Integer> iterator() { return new HeapIterator(); }
-
-    private class HeapIterator implements Iterator<Integer> {
-        private IndexMinPQ<Key> copy;
-
-        public HeapIterator() {
-            copy = new IndexMinPQ<Key>(pq.length - 1);
-            for (int i = 1; i <= n; i++)
-                copy.insert(pq[i], keys[pq[i]]);
-        }
-
-        public boolean hasNext()  { return !copy.isEmpty();                     }
-        public void remove()      { throw new UnsupportedOperationException();  }
-
-        public Integer next() {
-            if (!hasNext()) throw new NoSuchElementException();
-            return copy.delMin();
-        }
-    }
-
-    public static void main(String[] args) {
-        String[] strings = { "it", "was", "the", "best", "of", "times", "it", "was", "the", "worst" };
-
-        IndexMinPQ<String> pq = new IndexMinPQ<String>(strings.length);
-        for (int i = 0; i < strings.length; i++) {
-            pq.insert(i, strings[i]);
-        }
-
-        while (!pq.isEmpty()) {
-            int i = pq.delMin();
-            StdOut.println(i + " " + strings[i]);
-        }
-        StdOut.println();
-
-        for (int i = 0; i < strings.length; i++) {
-            pq.insert(i, strings[i]);
-        }
-
-        for (int i : pq) {
-            StdOut.println(i + " " + strings[i]);
-        }
-        
-        while (!pq.isEmpty()) {
-            pq.delMin();
         }
     }
 }
